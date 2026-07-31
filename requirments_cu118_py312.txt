@@ -1,5 +1,9 @@
 # Python 3.12 x64 / Windows + Linux / NVIDIA CUDA 11.8
 #
+# torch 和 torchaudio 由用户手动安装（Stage 1）：
+# torch==2.7.1+cu118
+# torchaudio==2.7.1+cu118
+#
 # Install in two stages from the project root. Torch and Torchaudio are NOT
 # listed below, so the second command cannot replace the verified cu118 pair.
 #
