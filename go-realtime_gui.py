@@ -72,6 +72,18 @@ except ImportError:
 except Exception as e:
     print(f"检测 GPU 时出错: {e}")
 
+# === 写入 RVC 根目录路径引导 ===
+site_packages = os.path.join(base_dir, "venv", "Lib", "site-packages")
+os.makedirs(site_packages, exist_ok=True)
+root_anchor = os.path.join(site_packages, "rvc_root_path.pth")
+with open(root_anchor, "w", encoding="utf-8") as f:
+    f.write(
+        "import sys, os as _o; _r = %r; sys.path.insert(0, _r); "
+        "[__import__(_m) for _m in ('infer', 'configs', 'i18n', 'tools', 'train')]\n"
+        % base_dir
+    )
+
+
 # === 启动 realtime_gui.py ===
 subprocess.run(
     [python, "-s", "realtime_gui.py"],
