@@ -15,9 +15,17 @@ GRAY = "\033[2m"
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 PYTHON_EXECUTABLE = sys.executable
-GIT_EXECUTABLE = os.path.normpath(
-    os.path.join(SCRIPT_DIR, "..", "..", ".xiaoziya", "PortableGit", "bin", "git.exe")
+GIT_BIN_DIR = os.path.normpath(
+    os.path.join(SCRIPT_DIR, "..", "..", ".xiaoziya", "PortableGit", "bin")
 )
+FFMPEG_BIN_DIR = os.path.normpath(
+    os.path.join(SCRIPT_DIR, "..", "..", ".xiaoziya", "ffmpeg", "bin")
+)
+
+# 把 PortableGit / ffmpeg 的 bin 目录加入本次进程的 PATH，
+for bin_dir in (GIT_BIN_DIR, FFMPEG_BIN_DIR):
+    if os.path.isdir(bin_dir):
+        os.environ["PATH"] = bin_dir + os.pathsep + os.environ.get("PATH", "")
 
 OPTIONS = [
     {
@@ -91,13 +99,13 @@ def select_option():
 
 def git_pull():
     """自动拉取更新，自动暂存用户的本地改动"""
-    if not os.path.isfile(GIT_EXECUTABLE):
+    if not os.path.isdir(GIT_BIN_DIR):
         return
 
     print("正在检查更新...")
     try:
         result = subprocess.run(
-            [GIT_EXECUTABLE, "pull", "--rebase", "--autostash"],
+            ["git", "pull", "--rebase", "--autostash"],
             capture_output=True, text=True, timeout=30, cwd=SCRIPT_DIR,
         )
         if result.returncode == 0:
