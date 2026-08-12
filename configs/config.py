@@ -10,6 +10,24 @@ from tools.file_io import read_text
 import torch
 import logging
 
+# RDNA4 (gfx1200/gfx1201) flash / memory-efficient SDPA backends crash
+# with hipErrorInvalidValue in torch; disable them only on this arch.
+# RDNA3 and earlier ROCm archs keep their defaults. Detection uses the
+# full gfx arch name (gcnArchName starting with "gfx12").
+def _is_rdna4():
+    if not getattr(torch.version, "hip", None) or not torch.cuda.is_available():
+        return False
+    try:
+        return torch.cuda.get_device_properties(
+            torch.cuda.current_device()
+        ).gcnArchName.startswith("gfx12")
+    except Exception:
+        return False
+
+if _is_rdna4():
+    torch.backends.cuda.enable_flash_sdp(False)
+    torch.backends.cuda.enable_mem_efficient_sdp(False)
+
 from tools.cuda_graph import configure_cuda_graph
 
 logger = logging.getLogger(__name__)

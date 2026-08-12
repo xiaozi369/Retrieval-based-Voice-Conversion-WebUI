@@ -28,6 +28,21 @@ def _device_type(device):
     return str(device).split(":", 1)[0]
 
 
+def _is_rdna4(device):
+    """RDNA4 (gfx1200/gfx1201) detection: gcnArchName starts with "gfx12" (ROCm only)."""
+    if not getattr(torch.version, "hip", None) or not torch.cuda.is_available():
+        return False
+    try:
+        index = device.index if isinstance(device, torch.device) else None
+        if index is None:
+            index = torch.cuda.current_device()
+        return torch.cuda.get_device_properties(index).gcnArchName.startswith(
+            "gfx12"
+        )
+    except Exception:
+        return False
+
+
 def load_hubert_model(device, is_half=False):
     """Load the local Transformers HuBERT/ContentVec model for RVC."""
     if not (HUBERT_MODEL_PATH / "config.json").is_file():
@@ -41,7 +56,10 @@ def load_hubert_model(device, is_half=False):
         "torch_dtype": dtype,
     }
     # DirectML does not implement every SDPA kernel used by Transformers.
-    if _device_type(device) == "privateuseone":
+    # RDNA4 (gfx1200/gfx1201) flash / memory-efficient SDPA backends also
+    # crash with hipErrorInvalidValue, so force eager attention there too;
+    # other ROCm archs (RDNA3 etc.) keep the default sdpa.
+    if _device_type(device) == "privateuseone" or _is_rdna4(device):
         load_options["attn_implementation"] = "eager"
 
     logger.info(
