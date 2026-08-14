@@ -10,6 +10,13 @@ from tools.file_io import read_text
 import torch
 import logging
 
+# Self-contained ROCm/RDNA4 compatibility patch: MIOpen hiprtc JIT header
+# fix + SDPA backend disable. Applies only on RDNA4 (gfx1200/gfx1201),
+# idempotent and a no-op everywhere else.
+from tools.rocm_patch import apply_rocm_patch
+
+_rocm_patch_status = apply_rocm_patch()
+
 # RDNA4 (gfx1200/gfx1201) flash / memory-efficient SDPA backends crash
 # with hipErrorInvalidValue in torch; disable them only on this arch.
 # RDNA3 and earlier ROCm archs keep their defaults. Detection uses the
