@@ -1,5 +1,5 @@
 """
-RVC 启动器 — GPU 检测 + 启动 WebUI
+RVC 控制服务启动器 — GPU 检测 + 启动 realtime_server.py
 """
 
 import os
@@ -8,8 +8,11 @@ import subprocess
 
 os.environ.setdefault("HF_ENDPOINT", "https://hf-mirror.com")
 
+# 本文件位于 xiaozi/ 子目录,项目根目录为上溯一级
+_ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
 python = sys.executable
-base_dir = os.path.dirname(os.path.abspath(__file__))
+base_dir = _ROOT_DIR
 
 # === 检测并选择 GPU ===
 try:
@@ -57,8 +60,9 @@ with open(root_anchor, "w", encoding="utf-8") as f:
     )
 
 
-# === 启动 webui.py ===
+# === 启动 realtime_server.py(同目录,位于 xiaozi/ 子目录) ===
+print("\033[1;32m[INFO]\033[0m 正在启动控制服务 realtime_server.py...")
 subprocess.run(
-    [python, "-s", "webui.py"],
+    [python, "-s", os.path.join(os.path.dirname(os.path.abspath(__file__)), "realtime_server.py")],
     cwd=base_dir,
 )
