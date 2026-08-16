@@ -1,5 +1,5 @@
 """
-RVC (ROCm) 启动菜单 — 支持方向键选择
+RVC 启动菜单 — 支持方向键选择
 """
 
 import os
@@ -35,7 +35,7 @@ OPTIONS = [
     },
     {
         "name": "启动实时变声",
-        "file": "go-realtime_gui.py",
+        "exe": "rvc-晓.exe",
         "description": "启动实时变声器界面，低延迟",
     },
     {
@@ -97,6 +97,37 @@ def select_option():
             sys.exit(0)
 
 
+def download_exe(target):
+    """从 Gitee 下载 rvc-晓.exe 到目标路径（不存在时由启动分支调用）。"""
+    url = (
+        "https://gitee.com/xiaozi22333/rvc-xiao/releases/download/"
+        "v0.1.1/rvc-%E6%99%93.exe"
+    )
+    print("未找到程序，正在下载 RVC-晓启动器 ...")
+    try:
+        import urllib.request
+
+        def _report(block_count, block_size, total_size):
+            downloaded = block_count * block_size
+            if total_size > 0:
+                percent = min(100, int(downloaded * 100 / total_size))
+                print(
+                    f"\r下载进度: {percent}% "
+                    f"({downloaded // 1024 // 1024}MB / {total_size // 1024 // 1024}MB)",
+                    end="",
+                )
+            else:
+                print(f"\r已下载: {downloaded // 1024 // 1024}MB", end="")
+
+        urllib.request.urlretrieve(url, target, reporthook=_report)
+        print()
+        print("✓ 下载完成")
+        return True
+    except Exception as e:
+        print(f"\n⚠ 下载失败: {e}")
+        return False
+
+
 def git_pull():
     """自动拉取更新，自动暂存用户的本地改动"""
     if not os.path.isdir(GIT_BIN_DIR):
@@ -141,6 +172,13 @@ def main():
                 webbrowser.open(option["url"])
                 print()
                 continue  # 返回菜单
+            elif "exe" in option:
+                target = os.path.join(SCRIPT_DIR, option["exe"])
+                if not os.path.exists(target):
+                    if not download_exe(target):
+                        break  # 下载失败则退出
+                subprocess.run([target], cwd=SCRIPT_DIR)
+                break  # 启动 exe 后退出
             else:
                 target = os.path.join(SCRIPT_DIR, option["file"])
                 subprocess.run([PYTHON_EXECUTABLE, "-s", target], cwd=SCRIPT_DIR)
